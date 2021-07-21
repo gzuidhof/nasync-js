@@ -13,7 +13,6 @@ function nasyncify(babel: any): { visitor: TraverseOptions<Node> } {
 
   function isLastStatementInProgram(node: types.Node) {
     if (!firstBlockStatement) return;
-
     return firstBlockStatement.body[firstBlockStatement?.body.length - 1] === node;
   }
 
@@ -32,12 +31,9 @@ function nasyncify(babel: any): { visitor: TraverseOptions<Node> } {
       BlockStatement(path) {
         if (firstBlockStatement === undefined) {
           firstBlockStatement = path.node;
-          // lastNodeInFirstBlockStatement = path.node.body[path.node.body.length - 1];
-          // console.log(lastNodeInFirstBlockStatement);
         }
       },
       Expression(path) {
-        // if (lastHasBeenReplaced) return;
         if (
           !lastHasBeenReplaced &&
           // The last statement in the original program should be the return value
@@ -55,14 +51,16 @@ function nasyncify(babel: any): { visitor: TraverseOptions<Node> } {
                 t.objectExpression([t.objectProperty(t.identifier("cellReturnValue"), path.node)]) /*]))*/
               )
             );
-            // Try to keep it on the same line
+            // Necessary to keep the new "return" statement on the same line as the original expression.
             replacement[0].node.loc = orgLoc;
             lastHasBeenReplaced = true;
             return;
           }
         }
 
+        // We don't want to await the return statement.
         if (isLastStatementInProgram(path.parent) && path.parentPath.isReturnStatement()) return;
+
         if (
           (path.node.start !== null && path.node.start < 2) || // The async wrap that enables top-level await shouldnt be awaited
           path.isAwaitExpression() ||

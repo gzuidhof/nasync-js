@@ -3,10 +3,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
 import typescript from "rollup-plugin-typescript2";
 import dts from "rollup-plugin-dts";
-import builtins from "rollup-plugin-node-builtins";
-import nodeResolve from "@rollup/plugin-node-resolve";
-import replace from "@rollup/plugin-replace";
-import globals from "rollup-plugin-node-globals";
+import { terser } from "rollup-plugin-terser";
 
 const CleanCSS = require("clean-css");
 
@@ -26,19 +23,14 @@ const css = () => {
 export default [
   {
     input: `src/index.ts`,
-    output: [{ file: "dist/index.js", format: "es" }],
+    output: [{ file: "dist/index.js", format: "es", plugins: [terser()] }],
     plugins: [
-      // nodeResolve({ browser: true }),
-      // builtins(),
-      // globals(),
-      //   nodePolyfills(),
       commonjs({ transformMixedEsModules: true }),
       typescript({
         include: ["./src/*.ts"],
       }),
       json(),
       resolve(),
-
       css(),
     ],
   },

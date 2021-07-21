@@ -95,6 +95,8 @@ export function registerNasync(runtime: Runtime) {
       htmlOutput.classList.add("cell-output-html");
       lit.render(lit.html`${transpiledCodeElement}${this.outputElement}${htmlOutput}`, this.elements.bottomElement);
 
+      // TODO: refactor this.. it can be simplified quite a bit
+      // the top try here will only throw when transpilation fails.
       try {
         const nasyncCode = transpileToNasync(code);
 
@@ -108,6 +110,7 @@ export function registerNasync(runtime: Runtime) {
         );
 
         const outVal = await evalNasync(nasyncCode);
+        await this.outputElement.unhookAfterOneTick(this.runtime.consoleCatcher);
 
         const val = outVal.value;
         const htmlOutputRendered = renderIfHtmlOutput(val, htmlOutput);
@@ -172,8 +175,7 @@ export function registerNasync(runtime: Runtime) {
             data: [e],
           });
         }
-        // console.error(e);
-        await this.outputElement.unhookAfterOneTick(this.runtime.consoleCatcher);
+
         throw e;
       }
     }
